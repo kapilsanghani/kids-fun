@@ -1,6 +1,7 @@
 import { _decorator, Component, director, Node } from 'cc';
 import { GridManager } from './GridManager';
 import { GameManager } from './GameManager';
+import { AudioManager } from './AudioManager';
 const { ccclass, property } = _decorator;
 
 @ccclass('UIManager')
@@ -16,6 +17,8 @@ export class UIManager extends Component {
     }
 
     onPlayClicked() {
+        AudioManager.getInstance().playButtonTap();
+
         this.homeScreen.active = false;
         this.scheduleOnce(() => {
             this.gameUI.active = true;
@@ -29,6 +32,8 @@ export class UIManager extends Component {
     }
 
     onPlayAgain() {
+        AudioManager.getInstance().playButtonTap();
+        
         director.loadScene("MainScene");
     }
 }

@@ -1,6 +1,7 @@
 import { _decorator, Component, Label, Node, sys } from 'cc';
 import { Card } from './Card';
 import { GridManager } from './GridManager';
+import { AudioManager } from './AudioManager';
 const { ccclass, property } = _decorator;
 export interface SavedCard {
     spriteIndex: number;
@@ -78,6 +79,7 @@ export class GameManager extends Component {
                         this.scheduleOnce(() => {
                             this.winScreen.active = true;
                             this.updateFinalScore();
+                            AudioManager.getInstance().playWin();
                             sys.localStorage.removeItem(this.DATA_KEY);
                         }, 0.5);
                     }

@@ -1,5 +1,6 @@
 import { _decorator, Component, Node, Vec3, tween, Sprite, SpriteFrame, UIOpacity } from 'cc';
 import { GameManager } from './GameManager';
+import { AudioManager } from './AudioManager';
 const { ccclass, property } = _decorator;
 
 @ccclass('Card')
@@ -25,6 +26,8 @@ export class Card extends Component {
         if (this.isFlipped) return;
 
         this.isFlipped = true;
+
+        AudioManager.getInstance().playButtonTap();
 
         tween(this.node)
             .to(0.2, { eulerAngles: new Vec3(0, 90, 0) }) // halfway rotate
@@ -62,6 +65,8 @@ export class Card extends Component {
         const opacity = this.node.getComponent(UIOpacity);
         if (!opacity) return;
 
+        AudioManager.getInstance().playMatch();
+        
         tween(this.node)
             .to(0.1, { scale: new Vec3(1.1, 1.1, 1) })
             .to(0.1, { scale: new Vec3(1, 1, 1) })
@@ -77,6 +82,7 @@ export class Card extends Component {
         const originalPos = this.node.position.clone(); // clone to avoid mutation
         const offset = 10;
     
+        AudioManager.getInstance().playMismatch();
         tween(this.node)
             .to(0.05, { position: new Vec3(originalPos.x + offset, originalPos.y, originalPos.z) })
             .to(0.05, { position: new Vec3(originalPos.x - offset, originalPos.y, originalPos.z) })
