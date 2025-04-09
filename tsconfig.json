@@ -4,6 +4,8 @@
 
   /* Add your custom configuration here. */
   "compilerOptions": {
-    "strict": false
+    "strict": false,
+    "target": "es2017", // or later: es2018, es2020
+    "lib": ["es2017", "dom"]
   }
 }
