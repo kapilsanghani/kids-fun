@@ -1,5 +1,6 @@
-import { _decorator, Component, instantiate, Node, Prefab, Size, SpriteFrame, UITransform, Vec3 } from 'cc';
+import { _decorator, Component, instantiate, log, Node, Prefab, Size, SpriteFrame, UIOpacity, UITransform, Vec3 } from 'cc';
 import { Card } from './Card';
+import type { SavedCard } from './GameManager';
 const { ccclass, property } = _decorator;
 
 @ccclass('GridManager')
@@ -46,7 +47,7 @@ export class GridManager extends Component {
         return Math.min(this.defaultCardSize, fittedSize);
     }
 
-    private createShuffledDeck(totalCards: number): { id: number, sprite: SpriteFrame }[] {
+    private createShuffledDeck(totalCards: number): { spriteIndex: number, sprite: SpriteFrame }[] {
         const pairsNeeded = totalCards / 2;
         const selectedFaces: SpriteFrame[] = [];
 
@@ -57,11 +58,11 @@ export class GridManager extends Component {
             selectedFaces.push(this.cardFrames[indices[i]]);
         }
 
-        const deck: { id: number, sprite: SpriteFrame }[] = [];
-        selectedFaces.forEach((face, idx) => {
-            // Create 2 copies of each face to form a pair
-            deck.push({ id: idx, sprite: face });
-            deck.push({ id: idx, sprite: face });
+        const deck: { spriteIndex: number, sprite: SpriteFrame }[] = [];
+        selectedFaces.forEach((face) => {
+            const index = this.cardFrames.indexOf(face); // get actual index from array
+            deck.push({ spriteIndex: index, sprite: face });
+            deck.push({ spriteIndex: index, sprite: face });
         });
 
         this.shuffle(deck); // Shuffle the final deck
@@ -69,7 +70,7 @@ export class GridManager extends Component {
     }
 
     // Instantiates card prefabs, sizes and positions them into a centered grid.
-    private spawnCards(deck: { id: number, sprite: SpriteFrame }[], cardSize: number) {
+    private spawnCards(deck: { spriteIndex: number, sprite: SpriteFrame }[], cardSize: number) {
         const spacing = 10;
         const totalWidth = (cardSize + spacing) * this.cols - spacing;
         const totalHeight = (cardSize + spacing) * this.rows - spacing;
@@ -93,8 +94,64 @@ export class GridManager extends Component {
                 // Assign face and ID to card
                 const cardScript = card.getComponent(Card);
                 const data = deck[deckIndex++];
-                cardScript.cardId = data.id;
+                cardScript.cardId = data.spriteIndex;
                 cardScript.setFrontSprite(data.sprite);
+            }
+        }
+    }
+
+    public getCardDataForSave(): SavedCard[] {
+        return this.node.children.map((node) => {
+            const card = node.getComponent(Card);
+            return {
+                spriteIndex: card.cardId,
+                isMatched: card.isMatched,
+                isFlipped: card.isFlipped
+            };
+        });
+    }
+
+    public generateGridFromSave(savedCards: SavedCard[]) {
+        const cardSize = this.calculateCardSize();
+        const spacing = 10;
+        const totalWidth = (cardSize + spacing) * this.cols - spacing;
+        const totalHeight = (cardSize + spacing) * this.rows - spacing;
+        const startX = -totalWidth / 2 + cardSize / 2;
+        const startY = totalHeight / 2 - cardSize / 2;
+    
+        this.node.removeAllChildren();
+    
+        for (let i = 0; i < savedCards.length; i++) {
+            const data = savedCards[i];
+            const row = Math.floor(i / this.cols);
+            const col = i % this.cols;
+    
+            const card = instantiate(this.cardPrefab);
+            this.node.addChild(card);
+    
+            card.setPosition(new Vec3(startX + (cardSize + spacing) * col, startY - (cardSize + spacing) * row, 0));
+    
+            const uiTransform = card.getComponent(UITransform);
+            uiTransform.setContentSize(cardSize, cardSize);
+    
+            const cardScript = card.getComponent(Card);
+            cardScript.setFrontSprite(this.cardFrames[data.spriteIndex]);
+            cardScript.cardId = data.spriteIndex;
+    
+            if (data.isMatched) {
+                cardScript.isMatched = true;
+                cardScript.front.active = true;
+                cardScript.back.active = false;
+                cardScript.lock(); 
+
+                const opacity = card.getComponent(UIOpacity);
+                if (opacity) opacity.opacity = 200;
+            } else if (data.isFlipped) {
+                cardScript.isFlipped = true;
+                cardScript.front.active = true;
+                cardScript.back.active = false;
+            } else {
+                cardScript.resetFlip();
             }
         }
     }

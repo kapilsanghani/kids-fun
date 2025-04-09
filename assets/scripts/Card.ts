@@ -65,9 +65,6 @@ export class Card extends Component {
         tween(this.node)
             .to(0.1, { scale: new Vec3(1.1, 1.1, 1) })
             .to(0.1, { scale: new Vec3(1, 1, 1) })
-            .call(() => {
-                this.lock();
-            })
             .start();
         
         tween(opacity)

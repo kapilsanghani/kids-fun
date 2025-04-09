@@ -1,8 +1,20 @@
-import { _decorator, Component, Label, Node } from 'cc';
+import { _decorator, Component, Label, Node, sys } from 'cc';
 import { Card } from './Card';
 import { GridManager } from './GridManager';
 const { ccclass, property } = _decorator;
+export interface SavedCard {
+    spriteIndex: number;
+    isMatched: boolean;
+    isFlipped: boolean;
+}
 
+export interface GameState {
+    rows: number;
+    cols: number;
+    cards: SavedCard[];
+    score: number;
+    currentMatches: number;
+}
 @ccclass('GameManager')
 export class GameManager extends Component {
     public static instance: GameManager;
@@ -11,11 +23,13 @@ export class GameManager extends Component {
     @property(Node) winScreen: Node = null;
     @property(Label) scoreLabel: Label = null;
     @property(Label) finalScoreLabel: Label = null;
+    @property(GridManager) gridManager: GridManager = null;
     
     private flippedCards: Card[] = [];
     private currentMatches: number = 0;
     
     private score: number = 0;
+    public readonly DATA_KEY = 'cardGameSave';
 
     public static getInstance(): GameManager {
         if (!GameManager.instance) {
@@ -51,14 +65,20 @@ export class GameManager extends Component {
                     cardA.playMatchEffect();
                     cardB.playMatchEffect();
 
+                    cardA.lock();
+                    cardB.lock();
+
                     this.removeCardsFromFlipped(cardA, cardB);
                     this.updateScoreDisplay();
+
+                    this.saveGameState();
 
                     // Win check
                     if (this.currentMatches >= this.cardContainer.getChildByName('GridManager').children.length / 2) {
                         this.scheduleOnce(() => {
                             this.winScreen.active = true;
                             this.updateFinalScore();
+                            sys.localStorage.removeItem(this.DATA_KEY);
                         }, 0.5);
                     }
                 }, 0.5);
@@ -68,6 +88,7 @@ export class GameManager extends Component {
                     cardA.playMismatchEffect();
                     cardB.playMismatchEffect();
                     this.removeCardsFromFlipped(cardA, cardB);
+                    // this.saveGameState();
                 }, 0.8);
             }
         }
@@ -98,29 +119,38 @@ export class GameManager extends Component {
         this.updateScoreDisplay();
         this.flippedCards = [];
 
-        // this.totalMatchesNeeded = (this.cardContainer.getChildByName('GridManager').children.length / 2);
         this.currentMatches = 0;
         this.winScreen.active = false;
     }
 
     private saveGameState() {
-        const cards: SavedCard[] = this.cardContainer.children.map((node) => {
-            const card = node.getComponent(Card);
-            return {
-                id: card.cardId,
-                isMatched: card.isMatched,
-                isFlipped: card.isFlipped
-            };
-        });
-    
         const gameState: GameState = {
             rows: this.gridManager.rows,
             cols: this.gridManager.cols,
-            cards,
-            score: this.score
+            cards: this.gridManager.getCardDataForSave(),
+            score: this.score,
+            currentMatches: this.currentMatches
         };
-    
-        sys.localStorage.setItem('cardGameSave', JSON.stringify(gameState));
+        sys.localStorage.setItem(this.DATA_KEY, JSON.stringify(gameState));
     }
+
+    public loadGameState(): boolean {
+        const saved = sys.localStorage.getItem(this.DATA_KEY);
+        if (!saved) return false;
+    
+        const state: GameState = JSON.parse(saved);
+    
+        this.score = state.score;
+        this.currentMatches = state.currentMatches ?? 0;
+        this.gridManager.rows = state.rows;
+        this.gridManager.cols = state.cols;
+    
+        this.gridManager.generateGridFromSave(state.cards);
+        this.updateScoreDisplay();
+    
+        return true;
+    }
+    
+    
     
 }

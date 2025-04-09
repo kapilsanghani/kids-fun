@@ -431,7 +431,7 @@
     "__prefab": null,
     "_contentSize": {
       "__type__": "cc.Size",
-      "width": 747.3506391222479,
+      "width": 688.4098982473928,
       "height": 79.6
     },
     "_anchorPoint": {
@@ -471,7 +471,7 @@
     "_overflow": 0,
     "_enableWrapText": true,
     "_font": {
-      "__uuid__": "6158424b-7931-48cc-a06b-4ca6e212a4dd",
+      "__uuid__": "93ca081c-d361-45e3-b736-23705f8f73cf",
       "__expectedType__": "cc.TTFFont"
     },
     "_isSystemFontUsed": false,
@@ -1818,6 +1818,9 @@
     "finalScoreLabel": {
       "__id__": 54
     },
+    "gridManager": {
+      "__id__": 30
+    },
     "_id": "14L648uYdO/b0MX16R/cKU"
   },
   {
@@ -1944,7 +1947,7 @@
     "__prefab": null,
     "_contentSize": {
       "__type__": "cc.Size",
-      "width": 247.99478563151797,
+      "width": 234.2263180764774,
       "height": 79.6
     },
     "_anchorPoint": {
@@ -1984,7 +1987,7 @@
     "_overflow": 0,
     "_enableWrapText": true,
     "_font": {
-      "__uuid__": "6158424b-7931-48cc-a06b-4ca6e212a4dd",
+      "__uuid__": "93ca081c-d361-45e3-b736-23705f8f73cf",
       "__expectedType__": "cc.TTFFont"
     },
     "_isSystemFontUsed": false,
@@ -2112,7 +2115,7 @@
     "__prefab": null,
     "_contentSize": {
       "__type__": "cc.Size",
-      "width": 152.10434847552145,
+      "width": 159.74001484646584,
       "height": 54.400000000000006
     },
     "_anchorPoint": {
@@ -2152,7 +2155,7 @@
     "_overflow": 0,
     "_enableWrapText": true,
     "_font": {
-      "__uuid__": "6158424b-7931-48cc-a06b-4ca6e212a4dd",
+      "__uuid__": "93ca081c-d361-45e3-b736-23705f8f73cf",
       "__expectedType__": "cc.TTFFont"
     },
     "_isSystemFontUsed": false,
