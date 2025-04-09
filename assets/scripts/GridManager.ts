@@ -8,29 +8,28 @@ export class GridManager extends Component {
     @property(Prefab) cardPrefab: Prefab = null;
     @property(Node) cardContainer: Node = null;
 
-    @property
-    rows: number = 4;
-
-    @property
-    cols: number = 4;
+    @property rows: number = 4;
+    @property cols: number = 4;
 
     // Sprite frames for the card faces
     @property([SpriteFrame]) cardFrames: SpriteFrame[] = [];
 
+    public totalCards = 0;
+    private readonly defaultCardSize = 240;
+
     start() {
-        this.generateGrid();
     }
 
     // Main method to generate a grid of cards.
     generateGrid() {
-        const totalCards = this.rows * this.cols;
-        if (totalCards % 2 !== 0) {
+        this.totalCards = this.rows * this.cols;
+        if (this.totalCards % 2 !== 0) {
             console.error("Card count must be even for matching pairs.");
             return;
         }
 
         const cardSize = this.calculateCardSize();
-        const deck = this.createShuffledDeck(totalCards);
+        const deck = this.createShuffledDeck(this.totalCards);
         this.spawnCards(deck, cardSize);
     }
 
@@ -41,7 +40,10 @@ export class GridManager extends Component {
 
         const maxCardWidth = (containerSize.width - spacing * (this.cols + 1)) / this.cols;
         const maxCardHeight = (containerSize.height - spacing * (this.rows + 1)) / this.rows;
-        return Math.min(maxCardWidth, maxCardHeight);
+        
+        const fittedSize = Math.min(maxCardWidth, maxCardHeight);
+
+        return Math.min(this.defaultCardSize, fittedSize);
     }
 
     private createShuffledDeck(totalCards: number): { id: number, sprite: SpriteFrame }[] {
@@ -79,7 +81,7 @@ export class GridManager extends Component {
         for (let row = 0; row < this.rows; row++) {
             for (let col = 0; col < this.cols; col++) {
                 const card = instantiate(this.cardPrefab);
-                this.cardContainer.addChild(card);
+                this.node.addChild(card);
 
                 const uiTransform = card.getComponent(UITransform);
                 uiTransform.setContentSize(cardSize, cardSize);
