@@ -13,8 +13,8 @@ export interface GameState {
     rows: number;
     cols: number;
     cards: SavedCard[];
-    score: number;
-    currentMatches: number;
+    totalMatches: number;
+    totalTurns: number;
 }
 @ccclass('GameManager')
 export class GameManager extends Component {
@@ -22,14 +22,15 @@ export class GameManager extends Component {
 
     @property(Node) cardContainer: Node = null;
     @property(Node) winScreen: Node = null;
-    @property(Label) scoreLabel: Label = null;
     @property(Label) finalScoreLabel: Label = null;
     @property(GridManager) gridManager: GridManager = null;
+    @property(Label) totalMatchesLabel: Label = null;
+    @property(Label) totalTurnsLabel: Label = null;
     
     private flippedCards: Card[] = [];
-    private currentMatches: number = 0;
     
-    private score: number = 0;
+    private totalMatches: number = 0;
+    private totalTurns: number = 0;
     public readonly DATA_KEY = 'cardGameSave';
 
     public static getInstance(): GameManager {
@@ -55,12 +56,14 @@ export class GameManager extends Component {
     
         // If two cards are flipped, compare them
         if (this.flippedCards.length >= 2) {
+            this.totalTurns++;
+            this.updateStatsDisplay();
+
             const [cardA, cardB] = this.flippedCards.slice(0, 2);
     
             if (cardA.cardId === cardB.cardId) {
                 // Match
-                this.score++;
-                this.currentMatches++;
+                this.totalMatches++;
 
                 this.scheduleOnce(() => {
                     cardA.playMatchEffect();
@@ -70,12 +73,11 @@ export class GameManager extends Component {
                     cardB.lock();
 
                     this.removeCardsFromFlipped(cardA, cardB);
-                    this.updateScoreDisplay();
-
                     this.saveGameState();
+                    this.updateStatsDisplay();
 
                     // Win check
-                    if (this.currentMatches >= this.cardContainer.getChildByName('GridManager').children.length / 2) {
+                    if (this.totalMatches >= this.cardContainer.getChildByName('GridManager').children.length / 2) {
                         this.scheduleOnce(() => {
                             this.winScreen.active = true;
                             this.updateFinalScore();
@@ -90,7 +92,6 @@ export class GameManager extends Component {
                     cardA.playMismatchEffect();
                     cardB.playMismatchEffect();
                     this.removeCardsFromFlipped(cardA, cardB);
-                    // this.saveGameState();
                 }, 0.8);
             }
         }
@@ -98,30 +99,30 @@ export class GameManager extends Component {
     
     private removeCardsFromFlipped(cardA: Card, cardB: Card) {
         this.flippedCards = this.flippedCards.filter(c => c !== cardA && c !== cardB);
-    } 
-    
-    private updateScoreDisplay() {
-        if (this.scoreLabel) {
-            this.scoreLabel.string = `${this.score}`;
-        }
     }
 
-    public getScore(): number {
-        return this.score;
+    private updateStatsDisplay() {
+        if (this.totalMatchesLabel) {
+            this.totalMatchesLabel.string = `${this.totalMatches}`;
+        }
+    
+        if (this.totalTurnsLabel) {
+            this.totalTurnsLabel.string = `${this.totalTurns}`;
+        }
     }
 
     public updateFinalScore() {
         if (this.finalScoreLabel) {
-            this.finalScoreLabel.string = `Score: ${this.score}`;
+            this.finalScoreLabel.string = `Matches : ${this.totalMatches}  |  Turns : ${this.totalTurns}`;
         }
     }
 
     public resetGame() {
-        this.score = 0;
-        this.updateScoreDisplay();
+        this.totalMatches = 0;
+        this.totalTurns = 0;
+        this.updateStatsDisplay();
         this.flippedCards = [];
 
-        this.currentMatches = 0;
         this.winScreen.active = false;
     }
 
@@ -130,8 +131,8 @@ export class GameManager extends Component {
             rows: this.gridManager.rows,
             cols: this.gridManager.cols,
             cards: this.gridManager.getCardDataForSave(),
-            score: this.score,
-            currentMatches: this.currentMatches
+            totalMatches: this.totalMatches,
+            totalTurns: this.totalTurns
         };
         sys.localStorage.setItem(this.DATA_KEY, JSON.stringify(gameState));
     }
@@ -142,13 +143,13 @@ export class GameManager extends Component {
     
         const state: GameState = JSON.parse(saved);
     
-        this.score = state.score;
-        this.currentMatches = state.currentMatches ?? 0;
+        this.totalMatches = state.totalMatches ?? 0;
+        this.totalTurns = state.totalTurns ?? 0;
         this.gridManager.rows = state.rows;
         this.gridManager.cols = state.cols;
     
         this.gridManager.generateGridFromSave(state.cards);
-        this.updateScoreDisplay();
+        this.updateStatsDisplay();
     
         return true;
     }
